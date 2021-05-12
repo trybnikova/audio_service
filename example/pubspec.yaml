@@ -14,6 +14,7 @@ dependencies:
   just_audio: ^0.7.0
   flutter_tts: ^3.0.0
   rxdart: ^0.26.0
+  flutter_sound: ^8.1.1
   audio_service:
     path: ../
 

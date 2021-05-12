@@ -1,13 +1,15 @@
 import 'dart:async';
-import 'dart:io' show Platform;
+import 'dart:io' show Directory, Platform;
 import 'dart:math';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
 
 void main() => runApp(new MyApp());
@@ -322,6 +324,24 @@ class AudioPlayerTask extends BackgroundAudioTask {
   int? get index => _player.currentIndex;
   MediaItem? get mediaItem => index == null ? null : queue[index!];
 
+  Future<void> _testRecorder() async {
+    Directory appDocDir = await getApplicationDocumentsDirectory();
+    String appDocPath = appDocDir.path;
+    var path = appDocPath + '/scene_recording.wav';
+    print(path);
+    FlutterSoundRecorder? recorder = FlutterSoundRecorder();
+    await recorder.openAudioSession(
+        focus: AudioFocus.requestFocusAndDuckOthers, category: SessionCategory.record, mode: SessionMode.modeGameChat);
+    recorder.startRecorder(
+      toFile: path,
+      sampleRate: 44100,
+      codec: Codec.pcm16WAV,
+    );
+    recorder.stopRecorder();
+    recorder.closeAudioSession();
+    recorder = null;
+  }
+
   @override
   Future<void> onStart(Map<String, dynamic>? params) async {
     // We configure the audio session for speech since we're playing a podcast.
@@ -329,6 +349,9 @@ class AudioPlayerTask extends BackgroundAudioTask {
     // switch between two types of audio as this example does.
     final session = await AudioSession.instance;
     await session.configure(AudioSessionConfiguration.speech());
+
+    _testRecorder();
+
     // Broadcast media item changes.
     _player.currentIndexStream.listen((index) {
       if (index != null) AudioServiceBackground.setMediaItem(queue[index]);
